@@ -26,7 +26,7 @@ function fail(msg) {
   process.exit(1);
 }
 
-function main() {
+async function main() {
   const eventJson = process.env.EVENT_JSON;
   if (!eventJson) fail("缺少 EVENT_JSON 环境变量（github.event 未传入）");
 
@@ -103,13 +103,44 @@ function main() {
   //   则回退到 Discussions 链接，保证按钮永远有效。
   const siteBase = (process.env.SITE_BASE_URL || "https://www.baiwumm.com").replace(/\/$/, "");
   const discussionUrl = discussion.html_url || "";
-  const postTitle = (discussion.title || "未知文章").trim();
+  // giscus mapping=pathname 时，discussion.title 即文章 path，如 "posts/iy5v650a"
+  const postPath = (discussion.title || "").trim();
+  let postTitle = postPath || "未知文章";
+
+  // 查询真实文章标题：margin 站点构建期生成 comment-titles.json（path→标题）
+  const titlesUrl = (
+    process.env.TITLES_URL ||
+    (siteBase + "/comment-titles.json")
+  ).replace(/\/$/, "");
+  if (postPath) {
+    try {
+      const resp = await fetch(titlesUrl, { redirect: "follow" });
+      if (resp.ok) {
+        const titles = await resp.json();
+        if (titles && titles[postPath]) {
+          postTitle = titles[postPath];
+        } else {
+          console.log(
+            `[giscus-notify] 标题映射中未找到 "${postPath}"，回退显示 path`
+          );
+        }
+      } else {
+        console.log(
+          `[giscus-notify] 获取标题映射失败 (${resp.status})，回退显示 path`
+        );
+      }
+    } catch (e) {
+      console.log(
+        `[giscus-notify] 获取标题映射异常: ${e.message}，回退显示 path`
+      );
+    }
+  }
 
   let postUrl = discussionUrl;
-  if (/^posts\/.+/i.test(postTitle)) {
-    postUrl = siteBase + "/" + postTitle;
-  } else if (/^\//.test(postTitle)) {
-    postUrl = siteBase + postTitle;
+  if (/^posts\/.+/i.test(postPath)) {
+    postUrl = siteBase + "/" + postPath;
+  } else if (/^\//.test(postPath)) {
+    postUrl = siteBase + postPath;
   }
 
   // 标签：giscus 评论本身无 tags，留空（模板 {{POST_TAGS}} 渲染为空行）。
@@ -171,4 +202,4 @@ function escapeHtml(str) {
     .replace(/'/g, "&#39;");
 }
 
-main();
+main().catch((e) => fail("未预期错误: " + (e && e.message ? e.message : e)));

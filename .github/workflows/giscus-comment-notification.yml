@@ -52,6 +52,7 @@ jobs:
           EVENT_JSON: ${{ toJSON(github.event) }}
           CATEGORY_NAME: ${{ vars.GISCUS_CATEGORY || 'Announcements' }}
           SITE_BASE_URL: https://baiwumm.com
+          TITLES_URL: https://baiwumm.com/comment-titles.json
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
