@@ -1,0 +1,12 @@
+{
+  "name": "giscus-notify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Giscus 评论邮件通知（事件驱动）：discussion_comment.created → 渲染邮件 → SMTP 发送",
+  "scripts": {
+    "notify": "node send-email.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.0"
+  }
+}

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新评论通知 · baiwumm</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+</head>
+<!--
+  视觉参考：public/rss.xsl（站点 RSS 阅读页，与全站一致）
+  浅色 token（rss.xsl 默认值，用户指定使用此套）：
+    --background: #f2f5ec
+    --foreground: #353538
+    --muted:      #bbc789
+    --border:     #7cadff
+    --accent:     #1158d1
+    --glow-1: rgba(124,58,237,0.14)   // 紫球 a1（右上）
+    --glow-2: rgba(17,88,209,0.12)    // 蓝球 a2（左下）
+  邮件客户端不支持 backdrop-filter / CSS 变量 / animation / filter:blur，
+  全部用内联硬编码等效还原；布局沿用现有版本，仅调整色彩搭配。
+
+  数据占位符（由 send-email.js 注入，来自 github.event）：
+    {{COMMENT_AVATAR}} {{COMMENT_AUTHOR}} {{COMMENT_TIME}} {{COMMENT_BODY}}
+    {{POST_TITLE}} {{POST_TAGS}} {{DISCUSSION_URL}} {{COMMENT_URL}}
+-->
+<body style="margin:0;padding:0;background:#f2f5ec;font-family:'Maple Mono CN','Fira Code','Cascadia Code',Consolas,monospace;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f5ec;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <!-- 主卡片：浅色背景 + 边框；Aurora 双球用 radial-gradient 叠底 -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:92%;background:#f2f5ec;border:1px solid rgba(124,173,255,0.6);border-radius:18px;overflow:hidden;position:relative;box-shadow:0 10px 30px -12px rgba(17,88,209,0.18);">
+
+          <!-- Aurora 紫球（右上，对应 rss.xsl .a1） -->
+          <tr>
+            <td style="position:relative;background:radial-gradient(420px circle at 100% 0%, rgba(124,58,237,0.14), transparent 60%);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- 顶部辉光条（蓝→紫，呼应 Aurora 双色） -->
+          <tr>
+            <td style="height:3px;background:linear-gradient(90deg,#1158d1,#7c3aed 60%,transparent);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- 头部：终端徽章（~ /giscus $ + ping 圆点） -->
+          <tr>
+            <td style="padding:26px 32px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="width:8px;height:8px;border-radius:999px;background:#1158d1;box-shadow:0 0 0 4px rgba(17,88,209,0.2);font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="padding-left:10px;font-size:13px;color:#353538;">
+                    <span style="color:#1158d1;">~</span> /giscus <span style="opacity:0.45;">$</span>
+                    <span style="color:rgba(53,53,56,0.55);padding-left:6px;">watch</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 标题（渐变文字，还原 rss.xsl .hero-title，静态化；Outlook 回退 color:#1158d1） -->
+          <tr>
+            <td style="padding:16px 32px 0;">
+              <div style="font-size:24px;font-weight:700;line-height:1.35;letter-spacing:-0.01em;background:linear-gradient(135deg,#1158d1 0%,#7c3aed 55%,#353538 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#1158d1;">
+                有一条新评论
+              </div>
+              <div style="margin-top:6px;font-size:13px;line-height:1.6;color:rgba(53,53,56,0.65);">
+                边白 · 记录代码、思考与灵感
+              </div>
+            </td>
+          </tr>
+
+          <!-- section-head：大写标签 + 渐变分隔线 -->
+          <tr>
+            <td style="padding:22px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#1158d1;white-space:nowrap;">
+                    // NEW COMMENT
+                  </td>
+                  <td width="100%" style="height:1px;background:linear-gradient(90deg,rgba(124,173,255,0.6),transparent);font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 评论卡片（card：圆角 + 边框 + 左侧 accent 辉光） -->
+          <tr>
+            <td style="padding:16px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(187,199,137,0.18);border:1px solid rgba(124,173,255,0.5);border-left:3px solid #1158d1;border-radius:16px;box-shadow:0 8px 24px -8px rgba(17,88,209,0.15);">
+                <tr>
+                  <td style="padding:20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="38" valign="top">
+                          <img src="{{COMMENT_AVATAR}}" width="38" height="38" alt="" style="border-radius:50%;border:1px solid rgba(17,88,209,0.4);display:block;" />
+                        </td>
+                        <td style="padding-left:12px;" valign="top">
+                          <div style="font-size:14px;color:#353538;font-weight:600;">{{COMMENT_AUTHOR}}</div>
+                          <div style="font-size:11px;color:rgba(53,53,56,0.5);margin-top:3px;">GitHub · {{COMMENT_TIME}} · 来自 baiwumm.com</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(124,173,255,0.35);font-size:14px;color:rgba(53,53,56,0.88);line-height:1.75;white-space:pre-wrap;">{{COMMENT_BODY}}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 文章来源卡片（card 风格，on post） -->
+          <tr>
+            <td style="padding:14px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(187,199,137,0.12);border:1px solid rgba(124,173,255,0.4);border-radius:16px;">
+                <tr>
+                  <td style="padding:16px 18px;">
+                    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(53,53,56,0.45);">on post</div>
+                    <div style="margin-top:6px;font-size:15px;font-weight:600;color:#353538;line-height:1.45;">
+                      《{{POST_TITLE}}》
+                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;">
+                      <tr>
+                        {{POST_TAGS}}
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 操作按钮（site-btn 风格） -->
+          <tr>
+            <td style="padding:24px 32px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-radius:10px;background:linear-gradient(90deg,#1158d1,#0d4aa8);box-shadow:0 6px 18px -6px rgba(17,88,209,0.4);">
+                    <a href="{{DISCUSSION_URL}}" target="_blank" style="display:inline-block;padding:11px 24px;font-size:13px;font-weight:600;color:#f2f5ec;text-decoration:none;letter-spacing:0.3px;">
+                      在 GitHub 查看 ↗
+                    </a>
+                  </td>
+                  <td style="padding-left:12px;">
+                    <a href="{{COMMENT_URL}}" target="_blank" style="display:inline-block;padding:11px 20px;font-size:13px;color:#1158d1;text-decoration:none;border:1px solid rgba(17,88,209,0.4);border-radius:10px;background:rgba(17,88,209,0.08);">
+                      前往文章
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 页脚（footer 风格） -->
+          <tr>
+            <td style="padding:28px 32px 26px;">
+              <div style="border-top:1px solid rgba(124,173,255,0.4);padding-top:18px;font-size:11px;letter-spacing:0.08em;color:rgba(53,53,56,0.5);line-height:1.7;text-align:center;">
+                由 <a href="https://baiwumm.com" target="_blank" style="color:#1158d1;text-decoration:none;">baiwumm.com</a> 提供 · 通过 giscus 评论监控自动发送<br />
+                若不想再收到通知，可在仓库 Actions 中禁用 <span style="color:rgba(17,88,209,0.7);">giscus-notify</span> 工作流
+              </div>
+            </td>
+          </tr>
+
+        </table>
+
+        <div style="margin-top:16px;font-size:10px;letter-spacing:0.1em;color:rgba(53,53,56,0.35);">
+          // powered by github actions · nodemailer
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

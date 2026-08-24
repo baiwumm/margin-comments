@@ -1,0 +1,61 @@
+# Giscus 评论邮件通知（事件驱动）
+#
+# 部署位置：baiwumm/margin-comments 仓库的 .github/workflows/ 下
+# 触发方式：读者通过 Giscus 发表评论 → GitHub Discussions 新增 comment
+#           → discussion_comment.created 事件自动触发本 workflow
+# 特点：
+#   - 不使用 cron / 不轮询 / 无 last-notified.json
+#   - 每次 Run 对应一次新评论事件，直接从 github.event 取数据
+#   - 失败即 workflow 失败（脚本 process.exit(1)），不更新任何状态
+#
+# 前置要求（在 margin-comments 仓库设置）：
+#   1. Settings → Actions → General → Workflow permissions 允许读取（默认即可）
+#   2. Settings → Secrets and variables → Actions → Repository secrets 添加：
+#      SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD / NOTIFY_EMAIL
+#   3. 本文件与 send-email.js、email-template.sample.html 已随仓库就位：
+#      .github/workflows/giscus-comment-notification.yml
+#      scripts/giscus-notify/send-email.js
+#      scripts/giscus-notify/email-template.sample.html
+#   4. 在本仓库执行 npm init -y && npm install nodemailer（或用 actions/setup-node 缓存）
+
+name: giscus-comment-notification
+
+on:
+  discussion_comment:
+    types: [created]
+
+# 最小权限原则：仅读取仓库内容（模板文件）与 Discussions 元数据。
+permissions:
+  contents: read
+  discussions: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # 一次事件一封邮件；逐条触发，不合并。
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install nodemailer
+        # 仅在评论仓库本地安装，不污染博客源码仓库
+        run: npm install nodemailer
+        working-directory: scripts/giscus-notify
+
+      - name: Send notification email
+        env:
+          EVENT_JSON: ${{ toJSON(github.event) }}
+          CATEGORY_NAME: ${{ vars.GISCUS_CATEGORY || 'Announcements' }}
+          SITE_BASE_URL: https://baiwumm.com
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          TEMPLATE_PATH: ${{ github.workspace }}/scripts/giscus-notify/email-template.sample.html
+        run: node scripts/giscus-notify/send-email.js
