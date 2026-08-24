@@ -37,10 +37,23 @@ function main() {
     fail("EVENT_JSON 解析失败: " + e.message);
   }
 
-  const comment = event.discussion_comment;
+  // GitHub discussion_comment 事件的顶层字段为 comment / discussion / repository / sender
+  const comment = event.comment;
   const discussion = event.discussion;
+
+  // 诊断：打印触发来源，便于排查非评论事件（如手动 Run workflow）。
+  console.log(
+    `[giscus-notify] 触发事件 action=${event.action || "(空)"}，` +
+      `顶层字段=[${Object.keys(event).join(", ")}]`
+  );
+
   if (!comment || !discussion) {
-    fail("event payload 缺少 discussion_comment 或 discussion 字段");
+    // 非 discussion_comment 事件（最常见：在 Actions 页面手动 "Run workflow"，
+    // 此时 github.event 不含评论字段）。这类情况正常跳过，不让 Actions 变红。
+    console.log(
+      "[giscus-notify] 非 discussion_comment 事件，跳过（未发送邮件）"
+    );
+    process.exit(0);
   }
 
   // 仅处理目标分类下的评论（payload 只有 category.name/slug/id，无 giscus categoryId）
