@@ -59,4 +59,5 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
           TEMPLATE_PATH: ${{ github.workspace }}/scripts/giscus-notify/email-template.sample.html
+          AUTHOR_WHITELIST: ${{ vars.AUTHOR_WHITELIST }}
         run: node scripts/giscus-notify/send-email.js

@@ -8,6 +8,7 @@
 // 环境变量（由 workflow 注入，敏感项来自 Secrets）：
 //   EVENT_JSON       — github.event 的 JSON 字符串（workflow 用 toJSON(github.event) 传入）
 //   CATEGORY_NAME    — 期望的 giscus 评论分类名（如 "Announcements"），用于过滤
+//   AUTHOR_WHITELIST — 评论者白名单（逗号分隔的 GitHub 用户名），博主回复不发邮件
 //   SITE_BASE_URL    — 博客站点根，如 https://baiwumm.com
 //   SMTP_HOST        — 来自 Secret
 //   SMTP_PORT        — 来自 Secret
@@ -64,6 +65,19 @@ async function main() {
       `[giscus-notify] 分类不匹配，跳过：期望 "${expectedCategory}"，实际 "${actualCategory}"`
     );
     process.exit(0); // 正常退出，不视为失败（这不是本博客评论）
+  }
+
+  // 评论者白名单：博主自己的回复不发邮件
+  const commentAuthor = comment.user && comment.user.login;
+  const authorWhitelist = (process.env.AUTHOR_WHITELIST || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (authorWhitelist.includes(commentAuthor)) {
+    console.log(
+      `[giscus-notify] 评论者 "${commentAuthor}" 在白名单中，跳过（未发送邮件）`
+    );
+    process.exit(0);
   }
 
   // 收信配置
