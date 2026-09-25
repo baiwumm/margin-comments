@@ -117,8 +117,12 @@ async function main() {
   //   则回退到 Discussions 链接，保证按钮永远有效。
   const siteBase = (process.env.SITE_BASE_URL || "https://www.baiwumm.com").replace(/\/$/, "");
   const discussionUrl = discussion.html_url || "";
-  // giscus mapping=pathname 时，discussion.title 即文章 path，如 "posts/iy5v650a"
-  const postPath = (discussion.title || "").trim();
+  // giscus mapping=pathname 时，discussion.title 即文章 path。
+  // 站点按目录格式部署（URL 带尾部斜杠），title 可能是 "posts/xxx/"，
+  // 统一去掉尾部斜杠再查映射（comment-titles.json 的 key 无尾部斜杠）。
+  // 仅保留根路径 "/" 不裁剪。
+  let postPath = (discussion.title || "").trim();
+  if (postPath.length > 1) postPath = postPath.replace(/\/+$/, "");
   let postTitle = postPath || "未知文章";
 
   // 查询真实文章标题：margin 站点构建期生成 comment-titles.json（path→标题）
