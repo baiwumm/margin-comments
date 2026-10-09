@@ -2,10 +2,7 @@
   "defaultCommentOrder": "newest",
   "origins": [
     "https://baiwumm.com",
-    "https://margin-baiwumm.vercel.app",
+    "https://www.baiwumm.com",
     "http://localhost:4321"
-  ],
-  "originsRegex": [
-    "^https://margin-baiwumm-[a-z0-9-]+\.vercel\.app$"
   ]
 }
